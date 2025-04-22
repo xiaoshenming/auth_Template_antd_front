@@ -1,78 +1,75 @@
 <template>
   <div class="register-container">
-    <a-card title="用户注册" :bordered="false" style="width: 450px">
-      <a-form
-          :model="formState"
-          name="register-form"
-          @finish="onFinish"
-          @finishFailed="onFinishFailed"
-          :label-col="{ span: 6 }"
-          :wrapper-col="{ span: 18 }"
-      >
-        <a-form-item
-            label="用户名"
-            name="name"
-            :rules="[{ required: true, message: '请输入用户名!' }]"
-        >
-          <a-input v-model:value="formState.name" />
-        </a-form-item>
+    <div class="register-card">
+      <h2>用户注册</h2>
 
-        <a-form-item
-            label="邮箱"
-            name="email"
-            :rules="[
-            { required: true, message: '请输入邮箱!' },
-            { type: 'email', message: '请输入有效的邮箱!' }
-          ]"
-        >
-          <a-input v-model:value="formState.email" />
-        </a-form-item>
+      <form @submit.prevent="onSubmit">
+        <div class="form-item">
+          <label for="name">用户名</label>
+          <input
+              id="name"
+              v-model="formState.name"
+              type="text"
+              required
+              placeholder="请输入用户名"
+          />
+        </div>
 
-        <a-form-item
-            label="密码"
-            name="password"
-            :rules="[
-            { required: true, message: '请输入密码!' },
-            { min: 6, message: '密码长度不能少于6个字符!' }
-          ]"
-        >
-          <a-input-password v-model:value="formState.password" />
-        </a-form-item>
+        <div class="form-item">
+          <label for="email">邮箱</label>
+          <input
+              id="email"
+              v-model="formState.email"
+              type="email"
+              required
+              placeholder="请输入邮箱"
+          />
+        </div>
 
-        <a-form-item
-            label="确认密码"
-            name="confirmPassword"
-            :rules="[
-            { required: true, message: '请确认密码!' },
-            { validator: validateConfirmPassword }
-          ]"
-        >
-          <a-input-password v-model:value="formState.confirmPassword" />
-        </a-form-item>
+        <div class="form-item">
+          <label for="password">密码</label>
+          <input
+              id="password"
+              v-model="formState.password"
+              type="password"
+              required
+              placeholder="请输入密码"
+              minlength="6"
+          />
+        </div>
 
-        <a-form-item :wrapper-col="{ offset: 6, span: 18 }">
-          <a-button type="primary" html-type="submit" :loading="loading" style="width: 100%">
-            注册
-          </a-button>
-        </a-form-item>
+        <div class="form-item">
+          <label for="confirmPassword">确认密码</label>
+          <input
+              id="confirmPassword"
+              v-model="formState.confirmPassword"
+              type="password"
+              required
+              placeholder="请确认密码"
+          />
+          <div v-if="passwordMismatch" class="input-error">两次输入的密码不一致</div>
+        </div>
 
-        <a-form-item :wrapper-col="{ offset: 6, span: 18 }">
-          <div class="extra-links">
-            <a @click="goToLogin">已有账号？立即登录</a>
-          </div>
-        </a-form-item>
-      </a-form>
+        <div class="form-actions">
+          <button type="submit" :disabled="loading || passwordMismatch">
+            {{ loading ? '注册中...' : '注册' }}
+          </button>
+        </div>
 
-      <a-alert v-if="errorMsg" type="error" :message="errorMsg" banner closable />
-      <a-alert v-if="successMsg" type="success" :message="successMsg" banner closable />
-    </a-card>
+        <div class="extra-links">
+          <a @click="goToLogin">已有账号？立即登录</a>
+        </div>
+      </form>
+
+      <div v-if="errorMsg" class="error-message">{{ errorMsg }}</div>
+      <div v-if="successMsg" class="success-message">{{ successMsg }}</div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { reactive, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { message } from 'ant-design-vue';
 import { register } from '../utils/auth';
 
 const router = useRouter();
@@ -95,24 +92,19 @@ const loading = ref<boolean>(false);
 const errorMsg = ref<string>('');
 const successMsg = ref<string>('');
 
-// 验证确认密码
-const validateConfirmPassword = async (_rule: any, value: string) => {
-  if (value === '') {
-    return Promise.reject('请确认您的密码');
-  } else if (value !== formState.password) {
-    return Promise.reject('两次输入的密码不一致');
-  } else {
-    return Promise.resolve();
-  }
-};
+const passwordMismatch = computed(() => {
+  return formState.confirmPassword && formState.password !== formState.confirmPassword;
+});
 
-const onFinish = async (values: FormState) => {
+const onSubmit = async () => {
+  if (passwordMismatch.value) return;
+
   loading.value = true;
   errorMsg.value = '';
   successMsg.value = '';
 
   try {
-    await register(values.name, values.email, values.password);
+    await register(formState.name, formState.email, formState.password);
     successMsg.value = '注册成功！请登录您的账号';
 
     // 3秒后自动跳转到登录页
@@ -120,15 +112,10 @@ const onFinish = async (values: FormState) => {
       router.push('/login');
     }, 3000);
   } catch (error: any) {
-    errorMsg.value = error.message;
+    errorMsg.value = error.message || '注册失败，请稍后再试';
   } finally {
     loading.value = false;
   }
-};
-
-const onFinishFailed = (errorInfo: any) => {
-  console.log('Failed:', errorInfo);
-  message.error('请正确填写所有必填项');
 };
 
 const goToLogin = () => {
@@ -143,11 +130,87 @@ const goToLogin = () => {
   align-items: center;
   min-height: 100vh;
   background-color: #f0f2f5;
-  padding: 20px 0;
+}
+
+.register-card {
+  background: white;
+  border-radius: 4px;
+  padding: 30px;
+  width: 340px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.form-item {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+}
+
+.input-error {
+  color: #ff4d4f;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.form-actions {
+  margin-top: 24px;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #40a9ff;
+}
+
+button:disabled {
+  background-color: #bae7ff;
+  cursor: not-allowed;
 }
 
 .extra-links {
+  margin-top: 16px;
   text-align: center;
-  margin-top: 8px;
+}
+
+a {
+  color: #1890ff;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.error-message {
+  margin-top: 16px;
+  color: #ff4d4f;
+  text-align: center;
+}
+
+.success-message {
+  margin-top: 16px;
+  color: #52c41a;
+  text-align: center;
 }
 </style>

@@ -44,46 +44,6 @@ const routes: Array<RouteRecordRaw> = [
         }
     },
     {
-        path: '/dashboard',
-        name: 'dashboard',
-        component: () => import('../views/dashboard.vue'),
-        meta: {
-            title: '仪表盘',
-            requiresAuth: true,
-            requiredRole: '2' // 普通用户及以上权限
-        }
-    },
-    {
-        path: '/vip',
-        name: 'vip',
-        component: () => import('../views/vip.vue'),
-        meta: {
-            title: 'VIP专区',
-            requiresAuth: true,
-            requiredRole: '3' // VIP用户及以上权限
-        }
-    },
-    {
-        path: '/admin',
-        name: 'admin',
-        component: () => import('../views/admin.vue'),
-        meta: {
-            title: '管理面板',
-            requiresAuth: true,
-            requiredRole: '4' // 管理员及以上权限
-        }
-    },
-    {
-        path: '/system',
-        name: 'system',
-        component: () => import('../views/system.vue'),
-        meta: {
-            title: '系统设置',
-            requiresAuth: true,
-            requiredRole: '5' // 仅系统超管权限
-        }
-    },
-    {
         path: '/error/forbidden',
         name: 'forbidden',
         component: () => import('../views/error/forbidden.vue'),

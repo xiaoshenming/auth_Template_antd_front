@@ -1,156 +1,80 @@
 <template>
   <div class="home-container">
-    <a-layout>
-      <a-layout-header class="header">
-        <div class="logo">我的应用</div>
-        <a-menu
-            v-if="isLoggedIn"
-            v-model:selectedKeys="selectedKeys"
-            theme="dark"
-            mode="horizontal"
-            :style="{ lineHeight: '64px' }"
-        >
-          <a-menu-item key="home">
-            <router-link to="/home">首页</router-link>
-          </a-menu-item>
-          <a-menu-item key="dashboard" v-if="hasPermission('2')">
-            <router-link to="/dashboard">仪表盘</router-link>
-          </a-menu-item>
-          <a-menu-item key="vip" v-if="hasPermission('3')">
-            <router-link to="/vip">VIP专区</router-link>
-          </a-menu-item>
-          <a-menu-item key="admin" v-if="hasPermission('4')">
-            <router-link to="/admin">管理面板</router-link>
-          </a-menu-item>
-          <a-menu-item key="system" v-if="hasPermission('5')">
-            <router-link to="/system">系统设置</router-link>
-          </a-menu-item>
-        </a-menu>
-        <div class="user-actions">
-          <template v-if="isLoggedIn">
-            <a-dropdown>
-              <a class="user-dropdown" @click.prevent>
-                <span>{{ userInfo?.name }}</span>
-                <down-outlined />
-              </a>
-              <template #overlay>
-                <a-menu>
-                  <a-menu-item key="profile">
-                    <user-outlined />
-                    个人资料
-                  </a-menu-item>
-                  <a-menu-divider />
-                  <a-menu-item key="logout" @click="handleLogout">
-                    <logout-outlined />
-                    退出登录
-                  </a-menu-item>
-                </a-menu>
-              </template>
-            </a-dropdown>
-          </template>
-          <template v-else>
-            <a-button type="link" @click="goToLogin">登录</a-button>
-            <a-button type="primary" @click="goToRegister">注册</a-button>
-          </template>
+    <header class="header">
+      <h1>权限测试系统</h1>
+      <div class="nav-links" v-if="isLoggedIn">
+        <router-link to="/home">首页</router-link>
+        <router-link to="/level2" v-if="hasPermission('2')">普通用户</router-link>
+        <router-link to="/level3" v-if="hasPermission('3')">VIP用户</router-link>
+        <router-link to="/level4" v-if="hasPermission('4')">管理员</router-link>
+        <router-link to="/level5" v-if="hasPermission('5')">系统超管</router-link>
+      </div>
+      <div class="user-actions">
+        <template v-if="isLoggedIn">
+          <span>{{ userInfo?.name }} ({{ getRoleName(userInfo?.role) }})</span>
+          <button @click="handleLogout">退出登录</button>
+        </template>
+        <template v-else>
+          <button @click="goToLogin">登录</button>
+          <button @click="goToRegister">注册</button>
+        </template>
+      </div>
+    </header>
+
+    <main class="content">
+      <div v-if="isLoggedIn" class="permission-test">
+        <h2>权限测试区域</h2>
+
+        <div class="permission-card level1">
+          <h3>Level 1: 初始账户权限</h3>
+          <p>所有登录用户都可以看到这部分内容</p>
         </div>
-      </a-layout-header>
 
-      <a-layout-content class="content">
-        <div class="site-layout-content">
-          <template v-if="isLoggedIn">
-            <a-card title="个人信息" :bordered="false">
-              <a-descriptions bordered>
-                <a-descriptions-item label="用户ID">{{ userInfo?.userId }}</a-descriptions-item>
-                <a-descriptions-item label="用户名">{{ userInfo?.name }}</a-descriptions-item>
-                <a-descriptions-item label="角色">{{ getRoleName(userInfo?.role) }}</a-descriptions-item>
-              </a-descriptions>
-
-              <a-divider />
-
-              <a-card title="权限测试" :bordered="false">
-                <a-space direction="vertical" style="width: 100%">
-                  <a-alert
-                      message="Level 1: 初始账户功能"
-                      description="所有登录用户都可以看到这部分内容。"
-                      type="info"
-                      show-icon
-                  />
-
-                  <a-alert
-                      v-if="hasPermission('2')"
-                      message="Level 2: 普通用户功能"
-                      description="普通用户及以上权限可以看到这部分内容。"
-                      type="success"
-                      show-icon
-                  />
-
-                  <a-alert
-                      v-if="hasPermission('3')"
-                      message="Level 3: VIP用户功能"
-                      description="VIP用户及以上权限可以看到这部分内容。"
-                      type="warning"
-                      show-icon
-                  />
-
-                  <a-alert
-                      v-if="hasPermission('4')"
-                      message="Level 4: 管理员功能"
-                      description="管理员及以上权限可以看到这部分内容。"
-                      type="error"
-                      show-icon
-                  />
-
-                  <a-alert
-                      v-if="hasPermission('5')"
-                      message="Level 5: 系统超管功能"
-                      description="只有系统超管可以看到这部分内容。"
-                      type="error"
-                      show-icon
-                  />
-                </a-space>
-              </a-card>
-            </a-card>
-          </template>
-
-          <template v-else>
-            <a-result
-                status="warning"
-                title="需要登录"
-                sub-title="请登录后查看您的个人信息和功能"
-            >
-              <template #extra>
-                <a-space>
-                  <a-button type="primary" @click="goToLogin">立即登录</a-button>
-                  <a-button @click="goToRegister">注册账号</a-button>
-                </a-space>
-              </template>
-            </a-result>
-          </template>
+        <div v-if="hasPermission('2')" class="permission-card level2">
+          <h3>Level 2: 普通用户权限</h3>
+          <p>普通用户及以上权限可以看到这部分内容</p>
         </div>
-      </a-layout-content>
 
-      <a-layout-footer style="text-align: center">
-        我的应用 ©2023 Created by Me
-      </a-layout-footer>
-    </a-layout>
+        <div v-if="hasPermission('3')" class="permission-card level3">
+          <h3>Level 3: VIP用户权限</h3>
+          <p>VIP用户及以上权限可以看到这部分内容</p>
+        </div>
+
+        <div v-if="hasPermission('4')" class="permission-card level4">
+          <h3>Level 4: 管理员权限</h3>
+          <p>管理员及以上权限可以看到这部分内容</p>
+        </div>
+
+        <div v-if="hasPermission('5')" class="permission-card level5">
+          <h3>Level 5: 系统超管权限</h3>
+          <p>只有系统超管可以看到这部分内容</p>
+        </div>
+      </div>
+
+      <div v-else class="login-reminder">
+        <h2>请登录系统</h2>
+        <p>登录后可以测试不同权限级别的功能</p>
+        <div class="login-buttons">
+          <button @click="goToLogin">登录</button>
+          <button @click="goToRegister">注册</button>
+        </div>
+      </div>
+    </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { DownOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons-vue';
 import { isAuthenticated, getUserInfo, logout, hasPermission as checkPermission } from '../utils/auth';
 
 const router = useRouter();
-const selectedKeys = ref<string[]>(['home']);
 const userInfo = ref(getUserInfo());
 const isLoggedIn = computed(() => isAuthenticated());
 
 // 获取角色名称
 const getRoleName = (role: string | undefined) => {
   if (!role) return '未知';
-
   const roleMap: Record<string, string> = {
     '1': '初始账户',
     '2': '普通用户',
@@ -158,7 +82,6 @@ const getRoleName = (role: string | undefined) => {
     '4': '管理员',
     '5': '系统超管'
   };
-
   return roleMap[role] || '未知';
 };
 
@@ -183,58 +106,86 @@ const goToLogin = () => {
 const goToRegister = () => {
   router.push('/register');
 };
-
-// 组件挂载时刷新用户信息
-onMounted(() => {
-  userInfo.value = getUserInfo();
-});
 </script>
 
 <style scoped>
 .home-container {
-  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 .header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
 }
 
-.logo {
-  color: white;
-  font-size: 20px;
+.nav-links {
+  display: flex;
+  gap: 15px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #333;
   font-weight: bold;
-  margin-right: 30px;
+}
+
+.nav-links a:hover {
+  color: #1890ff;
 }
 
 .user-actions {
-  margin-left: auto;
-  color: white;
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
-.user-dropdown {
+button {
+  padding: 6px 15px;
+  background-color: #1890ff;
   color: white;
-  padding: 0 12px;
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-.content {
-  padding: 0 50px;
-  margin-top: 16px;
+button:hover {
+  background-color: #40a9ff;
 }
 
-.site-layout-content {
-  padding: 24px;
-  background: #fff;
-  min-height: calc(100vh - 64px - 70px - 32px);
+.permission-test {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
-:deep(.ant-menu-item a) {
-  color: rgba(255, 255, 255, 0.65);
+.permission-card {
+  padding: 15px;
+  border-radius: 4px;
+  border: 1px solid #eee;
 }
 
-:deep(.ant-menu-item-selected a),
-:deep(.ant-menu-item a:hover) {
-  color: #fff;
+.level1 { background-color: #e6f7ff; }
+.level2 { background-color: #e6fffb; }
+.level3 { background-color: #fcffe6; }
+.level4 { background-color: #fff7e6; }
+.level5 { background-color: #fff1f0; }
+
+.login-reminder {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.login-buttons {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }
 </style>
